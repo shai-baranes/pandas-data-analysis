@@ -8,7 +8,7 @@
 #   print("", "#"*100)
 
 # ###     Example:
-# header_creator("Data Cleaning:")
+# header_creator("'Transform' usage (instead Apply:")
 
 
 import numpy as np
@@ -1087,3 +1087,66 @@ df['Year'].str.replace(r'(?P<year>\d{4})\?', lambda m: m.group('year'), regex=Tr
 # 4    1985
 
 
+
+
+ ####################################################################################################
+ #                                                                                                  #
+ #                                 'Transform' usage (instead Apply:                                #
+ #                                                                                                  #
+ ####################################################################################################
+
+
+import pandas as pd
+
+df = pd.DataFrame({
+    'team': ['A', 'A', 'A', 'A', 'B', 'B', 'B', 'B'],
+    'points': [30, 22, 19, 14, 14, 11, 20, 28]
+})
+
+
+#   team  points
+# 0    A      30
+# 1    A      22
+# 2    A      19
+# 3    A      14
+# 4    B      14
+# 5    B      11
+# 6    B      20
+# 7    B      28
+
+
+# Add a column with the mean() points per team, broadcasted to each row:
+
+df['mean_points'] = df.groupby('team')['points'].transform('mean')
+df['mean_points_2'] = df.groupby('team')['points'].transform(lambda x: x.mean()) # equivalent to above
+
+
+#   team  points  mean_points
+# 0    A      30        21.25
+# 1    A      22        21.25
+# 2    A      19        21.25
+# 3    A      14        21.25
+# 4    B      14        18.25
+# 5    B      11        18.25
+# 6    B      20        18.25
+# 7    B      28        18.25
+
+
+# summing all members per group to gain 100%
+df['percent_of_points'] = df.groupby('team')['points'].transform(lambda x: x / x.sum())
+
+#   team  points  mean_points  mean_points_2  percent_of_points
+# 0    A      30        21.25          21.25           0.352941
+# 1    A      22        21.25          21.25           0.258824
+# 2    A      19        21.25          21.25           0.223529
+# 3    A      14        21.25          21.25           0.164706
+# 4    B      14        18.25          18.25           0.191781
+# 5    B      11        18.25          18.25           0.150685
+# 6    B      20        18.25          18.25           0.273973
+# 7    B      28        18.25          18.25           0.383562
+
+
+
+# Another good usage for 'transform'
+#  Filling Missing 'N/A' Values by Group: 
+df['Salary'] = df.groupby('Neighborhood')['Salary'].transform(lambda x: x.fillna(x.mean()))
