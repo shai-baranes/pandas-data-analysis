@@ -236,15 +236,15 @@ print(corr)
 
 # # --------------Start------------
 
-# # Ploting the correlation matrix
+# Plotting the correlation matrix (find also correlation matrix using seaborn at proj. 'pandas_feature_relationship')
 
 # fig = plt.figure(figsize=(9,9))
 # plt.matshow(corr, cmap='RdBu', fignum=fig.number)
 # plt.xticks(range(len(corr.columns)), corr.columns, rotation=60)
 # plt.yticks(range(len(corr.columns)), corr.columns)
-# # plt.yticks(range(len(corr.columns)), corr.columns, rotation=90)
+# plt.yticks(range(len(corr.columns)), corr.columns, rotation=90)
 
-# plt.show()
+# plt.show() # Colored_Corr_Matrix.png
 
 # # --------------End--------------
 
@@ -680,6 +680,12 @@ prices.info() # you can see the gap/hole below (362 vs. 365 values)
  ####################################################################################################
 
 
+prices.index
+# DatetimeIndex(['2017-04-02', '2017-04-03', '2017-04-04', '2017-04-05',
+#                ..................................
+#                '2018-03-31', '2018-04-01'],
+#               dtype='datetime64[ns]', name='Timestamp', length=365, freq=None)
+
 prices.loc['2017-12-01':'2018-01-01'] # range taken from the plot w/ hole. from below we find that there are missing Eth values for 3 days (2017-12-08, 2017-12-09, 2017-12-10)
 #                  Bitcoin     Eth
 # Timestamp
@@ -712,6 +718,8 @@ pd.isna(prices).loc['2017-12-07':'2017-12-11'] # equivalents (TBD how to we util
 # 2017-12-11    False  False
 
 
+
+
 # now knowing that the null are for the Eth., we can run this: (filtering only the null for the entire DF - where we have 'True')
 prices[pd.isna(prices)['Eth']]
 prices[prices.isna()['Eth']]
@@ -729,20 +737,38 @@ prices[prices.isna()['Eth']]
 
 
 
+# another way to trck the nulls:
 # Equivalents (counting the rows with nulls)
-pd.isnull(prices).sum()  # count how many missing values are there in prices DF (sums up the bool vals is equivalent to count)
 prices.isnull().sum() # it is also a class method, so we can simplify the call
+pd.isnull(prices).sum()  # count how many missing values are there in prices DF (sums up the bool vals is equivalent to count)
 pd.isna(prices).sum()  # equivalent to above
 prices.isna().sum() # equivalent to above
 # Bitcoin    0
 # Eth        3
 
 
+# less useful but still good to know:
+prices.isnull().any()
+# Bitcoin    False
+# Eth         True
+
+
 prices.dropna(axis=1) # losing any column that has a null value
 
 # and we can drop rows (instead) where we have some nulls (no more hols - dangerous cmd)
-prices.dropna() # thus losing also the equivalent BTC prices 
+prices.dropna() # thus losing also the equivalent Bitcoin prices 
 # prices.dropna(inplace=True) # if we want a permanent change on 'prices'
+# no more 'Eth' if we go through with it...
+#                 Bitcoin
+# Timestamp              
+# 2017-04-02  1099.169125
+# 2017-04-03  1141.813000
+# 2017-04-04  1141.600363
+# 2017-04-05  1133.079314
+# 2017-04-06  1196.307937
+# ...                 ...
+
+
 
 # ----------------------------------Plot Begin
 # prices.plot(figsize=(12,6))
@@ -767,6 +793,16 @@ temp_prices.loc['2017-12-07':'2017-12-11']
 # 2017-12-10  14869.805000    0.00
 # 2017-12-11  16762.116667  513.29
 
+# Alternatively we could track on these specific rows:
+temp_prices[temp_prices['Bitcoin'].round(2).isin([16007.44, 15142.83, 14869.80])]
+temp_prices[temp_prices['Bitcoin'].isin([16007.436666666666, 15142.834152123332, 14869.805000])] # note that without the rounding, we had to provide the full number
+#                  Bitcoin  Eth
+# Timestamp                    
+# 2017-12-08  16007.436667  0.0
+# 2017-12-09  15142.834152  0.0
+# 2017-12-10  14869.805000  0.0
+
+
 
 temp_prices = prices.fillna(prices.mean())
 temp_prices.loc['2017-12-07':'2017-12-11'] 
@@ -784,8 +820,6 @@ temp_prices.loc['2017-12-07':'2017-12-11']
 # temp_prices.plot(figsize=(12,6)) # after filling the holes: 'dropping_hole_Figure_4.png'
 # plt.show()
 # ----------------------------------Plot End
-
-
 
 
 
@@ -811,6 +845,27 @@ temp_prices.loc['2017-12-07':'2017-12-11']
 # 2017-12-09  15142.834152  [513.29]
 # 2017-12-10  14869.805000  [513.29]
 # 2017-12-11  16762.116667   513.29
+
+
+# note that there is a quick option to convert dtypes on columns:
+temp_prices.astype({'Bitcoin': 'int', 'Eth': 'int'})
+#             Bitcoin  Eth
+# Timestamp               
+# 2017-04-02     1099   48
+# 2017-04-03     1141   44
+# 2017-04-04     1141   44
+# 2017-04-05     1133   44
+# 2017-04-06     1196   43
+# ...             ...  ...
+# 2018-03-28     7960  445
+# 2018-03-29     7172  383
+# 2018-03-30     6882  393
+# 2018-03-31     6935  394
+# 2018-04-01     6794  378
+
+temp_prices.astype({'Bitcoin': 'int', 'Eth': 'int'}).dtypes
+# Bitcoin    int32
+# Eth        int32
 
 
 
@@ -920,6 +975,9 @@ ambassadors = pd.Series([
 # Peter Ammon                  Germany
 # Klaus Scharioth              Germany
 
+import pdb; pdb.set_trace()  # breakpoint 2958c611 //
+
+
 
 ambassadors.duplicated() # first instance is considered as valid
 # Gerard Araud          False
@@ -930,6 +988,9 @@ ambassadors.duplicated() # first instance is considered as valid
 # Peter Ammon            [True]
 # Klaus Scharioth        [True]
 
+
+ambassadors.duplicated().count()
+# 7
 
 
 
