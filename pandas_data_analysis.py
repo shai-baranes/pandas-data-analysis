@@ -870,6 +870,66 @@ temp_prices.astype({'Bitcoin': 'int', 'Eth': 'int'}).dtypes
 
 
 
+
+
+temp_prices["BTC Tomorrow"] = temp_prices["Bitcoin"].shift(-1)
+temp_prices
+#                 Bitcoin     Eth  BTC Tomorrow
+# Timestamp                                    
+# 2017-04-02  1099.169125   48.55   1141.813000
+# 2017-04-03  1141.813000   44.13   1141.600363
+# 2017-04-04  1141.600363   44.43   1133.079314
+# 2017-04-05  1133.079314   44.90   1196.307937
+# 2017-04-06  1196.307937   43.23   1190.454250
+# ...                 ...     ...           ...
+# 2018-03-28  7960.380000  445.93   7172.280000
+# 2018-03-29  7172.280000  383.90   6882.531667
+# 2018-03-30  6882.531667  393.82   6935.480000
+# 2018-03-31  6935.480000  394.07   6794.105000
+# 2018-04-01  6794.105000  378.85           NaN
+
+
+
+my_duplicated_series = temp_prices.head(1).squeeze() # converting a single line from DF into pd.Series
+# Bitcoin         1099.169125
+# Eth               48.550000
+# BTC Tomorrow    1141.813000
+
+second_row_series = temp_prices.iloc[1:2, :].squeeze()
+
+dict_no_index = temp_prices.head(1).squeeze().to_dict() # converting a single line from DF into a dictionary (not used)
+# {'Bitcoin': 1099.169125, 'Eth': 48.55, 'BTC Tomorrow': 1141.813}
+
+dict_no_index['Bitcoin'] = 1100
+
+
+
+
+# duplicating the first row to be also in last position
+temp_prices = pd.concat([temp_prices, pd.DataFrame([my_duplicated_series])])
+# temp_prices = pd.concat([temp_prices, pd.DataFrame([my_duplicated_series])], ignore_index=False) # above is same as ignore index False
+
+temp_prices = pd.concat([temp_prices, pd.DataFrame([second_row_series])]) # duplicating also the 2nd row
+
+temp_prices = pd.concat([temp_prices, pd.DataFrame([dict_no_index])]) # duplicating also the 2nd row
+
+temp_prices.duplicated().sum() # note that duplicated ignores the index if varies
+# 3
+
+temp_prices.duplicated(['BTC Tomorrow', 'Eth']).sum()
+# 4
+
+
+temp_prices = temp_prices.drop_duplicates() # removes the fully duplicated rows (not removing the altered Bitcoin value)
+
+
+temp_prices = temp_prices.drop_duplicates(['BTC Tomorrow', 'Eth']) # removes the fully duplicated rows (not removing the altered Bitcoin value)
+# (hence returning to base 1)
+
+
+
+
+
 # -------------------------------
 # TBD  TBD  TBD  TBD  TBD  TBD  TBD  
 # -------------------------------
@@ -975,7 +1035,6 @@ ambassadors = pd.Series([
 # Peter Ammon                  Germany
 # Klaus Scharioth              Germany
 
-import pdb; pdb.set_trace()  # breakpoint 2958c611 //
 
 
 
@@ -1208,6 +1267,6 @@ df['percent_of_points'] = df.groupby('team')['points'].transform(lambda x: x / x
 
 
 
-# Another good usage for 'transform'
+# Another good usage for 'transform' (the below was taken from another session)
 #  Filling Missing 'N/A' Values by Group: 
-df['Salary'] = df.groupby('Neighborhood')['Salary'].transform(lambda x: x.fillna(x.mean()))
+# df['Salary'] = df.groupby('Neighborhood')['Salary'].transform(lambda x: x.fillna(x.mean()))
